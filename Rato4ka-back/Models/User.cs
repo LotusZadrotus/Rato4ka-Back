@@ -6,11 +6,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rato4ka_back.Models
 {
     [Table("Users")]
-    public class User
+    public class User: Base
     {
-        [Key]
-        [Column("id")]
-        public int Id { get; set; }
         [Column("avatar")]
         public byte[]? Avatar { get; set; }
         [Column("discordId")]

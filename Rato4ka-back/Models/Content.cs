@@ -3,8 +3,6 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.VisualBasic;
-using Npgsql.TypeHandlers;
-using Npgsql.TypeHandlers.DateTimeHandlers;
 
 namespace Rato4ka_back.Models
 {

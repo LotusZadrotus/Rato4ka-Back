@@ -1,7 +1,6 @@
 using System.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Npgsql.TypeHandlers.DateTimeHandlers;
 
 namespace Rato4ka_back.Models
 {
