@@ -11,6 +11,8 @@ namespace Rato4ka_back.Repositories{
         Task DeleteAsync(T item);
         Task DeleteAsync(int id);
         Task UpdateAsync(T item);
-        Task<IEnumerable<T>> ExecuteSQLQuaryAsync(string quary);
+        Task<IEnumerable<T>> ExecuteSQLQuaryAsync(string quary, params object[] parameters);
+        int Save();
+        Task<int> SaveAsync();
     }
 }
