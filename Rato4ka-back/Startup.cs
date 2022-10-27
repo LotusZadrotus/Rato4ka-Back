@@ -15,6 +15,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Rato4ka_back.Models;
+using Rato4ka_back.Repositories;
+using Rato4ka_back.Repositories.impl;
 using Rato4ka_back.Services;
 using Rato4ka_back.Services.impl;
 using Rato4ka_back.Util;
@@ -44,6 +46,8 @@ namespace Rato4ka_back
                 option.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"));
             });
             services.AddTransient<IMailService, MailService>();
+            services.AddScoped<IUnit, Unit>();
+            services.AddScoped<IUserSevice, UserService>();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
                 options.RequireHttpsMetadata = false;
