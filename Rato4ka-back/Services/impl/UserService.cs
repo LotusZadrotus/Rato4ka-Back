@@ -26,6 +26,7 @@ namespace Rato4ka_back.Services.impl
             try
             {
                 await unit.GetRepo<User>().DeleteAsync(user);
+                await unit.SaveAsync();
             }
             catch (Exception e)
             {
@@ -153,15 +154,34 @@ namespace Rato4ka_back.Services.impl
                 throw ex;
             }
         }
-
-        public Task<UserDetailInfoDTO> GetUserSecured(int id)
+        public async Task UpdateUser(UserDetailInfoDTO user)
         {
-            throw new System.NotImplementedException();
+            try
+            {
+                var toUpdate = await unit.GetRepo<User>().GetAsync(user.Id);
+                toUpdate.Name = user.Name;
+                await unit.GetRepo<User>().UpdateAsync(toUpdate);
+                await unit.SaveAsync();
+            }catch(Exception e)
+            {
+                _logger.LogError(e.Message);
+                throw new ServiceException($"Error happened in UserService by method UpdateUser.{Environment.NewLine}Message: {e.Message}{Environment.NewLine}Inner Exception: {e.InnerException.Message}{Environment.NewLine}User: {user}");
+            }
         }
-
-        public Task UpdateUser(UserDetailInfoDTO user)
+        public async Task UpdateUserAvatar(int id, byte[] avatar)
         {
-            throw new System.NotImplementedException();
+            try
+            {
+                var toUpdate = await unit.GetRepo<User>().GetAsync(id);
+                toUpdate.Avatar = avatar;
+                await unit.GetRepo<User>().UpdateAsync(toUpdate);
+                await unit.SaveAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                throw new ServiceException($"Error happened in UserService by method UpdateUserAvatar.{Environment.NewLine}Message: {e.Message}{Environment.NewLine}Inner Exception: {e.InnerException.Message}{Environment.NewLine}Id: {id}{Environment.NewLine}Image: {avatar}");
+            }
         }
     }
 }
