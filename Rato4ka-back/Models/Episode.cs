@@ -5,10 +5,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rato4ka_back.Models
 {
     [Table("Episodes")]
-    public class Episode
+    public class Episode: Base
     {
-        [Column("id")]
-        public int Id { get; set; }
         [Column("episodeNumber")]
         public int EpisodeNumber { get; set; }
         [Column("name")]

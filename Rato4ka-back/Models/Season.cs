@@ -6,11 +6,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rato4ka_back.Models
 {
     [Table("Seasons")]
-    public class Season
+    public class Season: Base
     {
-        [Key]
-        [Column("id")]
-        public int Id { get; set; }
         [Column("name")]
         public string? Name { get; set; }
         [Column("seasonNumber")]

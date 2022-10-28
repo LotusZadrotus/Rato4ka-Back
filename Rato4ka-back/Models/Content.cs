@@ -7,11 +7,8 @@ using Microsoft.VisualBasic;
 namespace Rato4ka_back.Models
 {
     [Table("Contents")]
-    public class Content
+    public class Content: Base
     {
-        [Key]
-        [Column("id")]
-        public int? Id { get; set; }
         [Column(name:"name")]
         public string? Name { get; set; }
         [Column("tagsIds",TypeName = "json")]
