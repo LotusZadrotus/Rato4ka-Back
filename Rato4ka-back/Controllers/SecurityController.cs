@@ -17,10 +17,11 @@ namespace Rato4ka_back.Controllers
 {
     [ApiController]
     [Route("/api/security")]
-    public class SecurityController:ControllerBase
+    public class SecurityController: ControllerBase
     {
         private readonly DBContext _context;
         private readonly ILogger<SecurityController> _logger;
+
 
         public SecurityController(DBContext context, ILogger<SecurityController> logger)
         {
@@ -47,6 +48,7 @@ namespace Rato4ka_back.Controllers
                 claims: identity.Claims,
                 expires: now.Add(TimeSpan.FromDays(AuthOptions.LIFETIME)),
                 signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+            
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
  
             var response = new

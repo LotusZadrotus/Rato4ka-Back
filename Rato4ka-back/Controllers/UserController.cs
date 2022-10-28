@@ -256,7 +256,7 @@ namespace Rato4ka_back.Controllers
             }
             catch (Exception e)
             {
-                _logger.Log(LogLevel.Error, e, "Error in method UpdateUser" + '\n' + user.ToString());
+                _logger.Log(LogLevel.Error, e, "Error in method UpdateUser" + Environment.NewLine + user.ToString());
                 return new BadRequestObjectResult(e);
             }
         }

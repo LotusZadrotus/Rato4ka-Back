@@ -152,7 +152,6 @@ namespace Rato4ka_back.Controllers
                 content.CreatorId = Convert.ToInt32(User.Claims.First(x => x.Type == "id").Value);
                 content.User = null;
                 content.CreatedAt = null;
-                content.Id = null;
                 await _context.Contents.AddAsync(content);
                 await _context.SaveChangesAsync();
                 return new OkResult();
