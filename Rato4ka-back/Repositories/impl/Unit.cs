@@ -1,8 +1,12 @@
-﻿using Rato4ka_back.Models;
+﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Rato4ka_back.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
+#nullable enable
 namespace Rato4ka_back.Repositories.impl
 {
     public class Unit : IUnit
@@ -31,7 +35,23 @@ namespace Rato4ka_back.Repositories.impl
         }
         public Task<int?> GetIdByLink(string link)
         {
-            return Task.Run(()=>_dbContext.Links.FirstOrDefault(x => x.Link.Equals(link)).Id);
+            return Task.Run(() =>
+            {
+                var item = _dbContext.Links.FirstOrDefault(x => x.Link.Equals(link));
+                return item?.Id;            
+            });
+        }
+        public async Task AddCred(Cred cred)
+        {
+            await _dbContext.Credentials.AddAsync(cred);
+        }
+        public Task<User?> GetUserByLogin(string login)
+        {
+            return Task.Run(()=>
+            {
+                var item = _dbContext.Users.FirstOrDefault(x => String.Equals(x.Login, login, StringComparison.CurrentCulture));
+                return item is null ? null : item;
+            });
         }
         #region Disposable
 
@@ -55,7 +75,7 @@ namespace Rato4ka_back.Repositories.impl
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-        ~Unit{
+        ~Unit(){
             Dispose(false);
         }
         #endregion

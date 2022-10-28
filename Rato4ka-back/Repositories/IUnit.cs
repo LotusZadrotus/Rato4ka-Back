@@ -1,7 +1,7 @@
 ﻿using Rato4ka_back.Models;
 using System;
 using System.Threading.Tasks;
-
+#nullable enable
 namespace Rato4ka_back.Repositories
 {
     public interface IUnit: IDisposable
@@ -10,5 +10,7 @@ namespace Rato4ka_back.Repositories
         public int Save();
         public Task<int> SaveAsync();
         public Task<int?> GetIdByLink(string link);
+        public Task AddCred(Cred cred);
+        public Task<User?> GetUserByLogin(string login);
     }
 }
