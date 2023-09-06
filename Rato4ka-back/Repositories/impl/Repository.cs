@@ -3,7 +3,7 @@ using Rato4ka_back.Models;
 using Rato4ka_back.Repositories;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Rato4ka_back
@@ -25,9 +25,13 @@ namespace Rato4ka_back
             }
             return item;
         }
-        public async Task<IEnumerable<T>> GetListAsync()
+        public async IAsyncEnumerable<T> GetListAsync()
         {
-            return await _dbContext.Set<T>().ToListAsync();
+            var set = _dbContext.Set<T>();
+            for(int i = 1; i< set.Count()+1; i++)
+            {
+                yield return await set.FindAsync(i);
+            }
         }
         public async Task<T> AddAsync(T item)
         {
