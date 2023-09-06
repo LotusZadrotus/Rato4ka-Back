@@ -49,8 +49,25 @@ namespace Rato4ka_back.Repositories.impl
         {
             return Task.Run(()=>
             {
-                var item = _dbContext.Users.FirstOrDefault(x => String.Equals(x.Login, login, StringComparison.CurrentCulture));
+                var item = _dbContext.Users.FirstOrDefault(x => String.Equals(x.Login, login));
                 return item is null ? null : item;
+            });
+        }
+        public Task<Cred?> GetCred(string login)
+        {
+            return Task.Run(() =>
+            {
+                var item = _dbContext.Credentials.FirstOrDefault(x => x.Login == login);
+                return item is null ? null : item;
+            });
+        }
+        public Task DeleteCred(string login)
+        {
+            return Task.Run(() =>
+            {
+                var item = _dbContext.Credentials.FirstOrDefault(x => x.Login == login);
+                if(item is null) throw new InvalidOperationException("Can't remove item becouse it doesn't exists");
+                _dbContext.Credentials.Remove(item);
             });
         }
         #region Disposable

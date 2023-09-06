@@ -12,5 +12,7 @@ namespace Rato4ka_back.Repositories
         public Task<int?> GetIdByLink(string link);
         public Task AddCred(Cred cred);
         public Task<User?> GetUserByLogin(string login);
+        public Task<Cred?> GetCred(string login);
+        public Task DeleteCred(string login);
     }
 }
