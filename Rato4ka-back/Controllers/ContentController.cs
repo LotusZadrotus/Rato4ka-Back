@@ -27,7 +27,7 @@ namespace Rato4ka_back.Controllers
         }
         [HttpGet]
         [Route("[action]")]
-        public async Task<ActionResult<Content>> GetAllContent()
+        public async Task<ActionResult<Contents>> GetAllContent()
         {
             try
             {
@@ -35,8 +35,7 @@ namespace Rato4ka_back.Controllers
                 {
                     id = v.Id,
                     name = v.Name,
-                    tags = v.TagsIds,
-                    desc = v.Desc,
+                    desc = v.Decription,
                     image = v.Image,
                     releaseDate = v.ReleaseDate
                 }).ToListAsync();
@@ -55,7 +54,7 @@ namespace Rato4ka_back.Controllers
         }
         [HttpGet]
         [Route("[action]")]
-        public async Task<ActionResult<Content>> GetContents(int page)
+        public async Task<ActionResult<Contents>> GetContents(int page)
         {
             try
             {
@@ -64,8 +63,7 @@ namespace Rato4ka_back.Controllers
                     id = v.Id,
                     name = v.Name,
                     // tags = v.TagsIds,
-                    desc = v.Desc,
-                    imageURL = v.imgURL,
+                    desc = v.Decription,
                     releaseDate = v.ReleaseDate
                 }).OrderBy(x=>x.id).Skip((page-1)*10).Take(10).ToListAsync();
                 if (toReturn.Count == 0)
@@ -83,7 +81,7 @@ namespace Rato4ka_back.Controllers
         }
         [HttpGet]
         [Route("[action]/{id}")]
-        public async Task<ActionResult<Content>> GetContentById(int id)
+        public async Task<ActionResult<Contents>> GetContentById(int id)
         {
             try
             {
@@ -94,9 +92,8 @@ namespace Rato4ka_back.Controllers
                         createdAt = x.CreatedAt,
                         releaseDate = x.ReleaseDate,
                         //tags = x.TagsIds == null ? x.TagsIds : new []{""},
-                        description = x.Desc,
-                        User = new {x.User.Id, x.User.Name, x.User.Avatar},
-                        imageURL = x.imgURL
+                        description = x.Decription,
+                        User = new {x.User.Id, x.User.Name, x.User.Avatar}
                     }).ToListAsync();
                 return new JsonResult(toReturn);
             }
@@ -109,7 +106,7 @@ namespace Rato4ka_back.Controllers
 
         [HttpGet]
         [Route("[action]/{name}")]
-        public async Task<ActionResult<Content>> GetContentByName(string name)
+        public async Task<ActionResult<Contents>> GetContentByName(string name)
         {
             try
             {
@@ -119,9 +116,8 @@ namespace Rato4ka_back.Controllers
                 {
                     id = x.Id,
                     name = x.Name,
-                    tags = x.TagsIds,
                     releaseDate = x.ReleaseDate,
-                    desc = x.Desc,
+                    desc = x.Decription,
                     image = x.Image
                 }).ToListAsync();
                 toReturn = toReturn.Where(x => regex.IsMatch(x.name)).ToList();
@@ -142,7 +138,7 @@ namespace Rato4ka_back.Controllers
         [HttpPost]
         [Authorize]
         [Route("[action]")]
-        public async Task<ActionResult> CreateContent([FromBody] Content content)
+        public async Task<ActionResult> CreateContent([FromBody] Contents content)
         {
             try
             {
@@ -166,7 +162,7 @@ namespace Rato4ka_back.Controllers
         [HttpPost]
         [Authorize]
         [Route("[action]")]
-        public async Task<ActionResult> UpdateContent([FromBody] Content content)
+        public async Task<ActionResult> UpdateContent([FromBody] Contents content)
         {
             try
             {
@@ -221,7 +217,7 @@ namespace Rato4ka_back.Controllers
         {
             try
             {
-                var item = await _context.Contents.Select(x=>new {x.Id, x.imgURL, x.Image}).FirstAsync(x => x.imgURL == url);
+                var item = await _context.Contents.Select(x=>new {x.Id, x.Image}).FirstAsync();
                 if (item.Image == null)
                 {
                     var info = new FileInfo(@"assets/defaul-img.jpg");
