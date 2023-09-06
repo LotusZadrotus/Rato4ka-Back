@@ -10,18 +10,26 @@ namespace Rato4ka_back.Models
     {
         [Column("name")]
         public string? Name { get; set; }
-        [Column("seasonNumber")]
-        public int? SeasonNumber { get; set; }
-        [Column("numberOfEpisodes")]
-        public int? NumberOfEpisodes { get; set; }
-        [Column("description")]
-        public string? Description { get; set; }
-        [Column("releaseDate")]
-        public DateTime? ReleaseDate { get; set; }
-        [Column("contentId")]
+        [Column("content_id")]
         public int ContentId { get; set; }
         [ForeignKey("ContentId")]
-        public Content Content { get; set; }
+        [Column("creator_id")]
+        public int CreatorId { get; set; }
+        [ForeignKey("ContentId")]
+        [Column("release_date")]
+        public DateTime? ReleaseDate { get; set; }
+        [Column("image")]
+        public Byte[]? Image { get; set; }
+        [Column("desc")]
+        public string? Description { get; set; }
+        [Column("season_number")]
+        public int? SeasonNumber { get; set; }
+        [Column("is_movie")]
+        public bool IsMovie { get; set; } = false;
+        [Column("duration")]
+        public int? Duration { get; set; }
+        
+        public Contents Content { get; set; }
         
     }
 }
