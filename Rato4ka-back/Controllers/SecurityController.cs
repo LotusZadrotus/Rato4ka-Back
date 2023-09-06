@@ -10,7 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Rato4ka_back.DTO;
+using Rato4ka_back.Exceptions;
 using Rato4ka_back.Models;
+using Rato4ka_back.Services;
+using Rato4ka_back.Services.impl;
 using Rato4ka_back.Util;
 
 namespace Rato4ka_back.Controllers
@@ -19,93 +23,69 @@ namespace Rato4ka_back.Controllers
     [Route("/api/security")]
     public class SecurityController: ControllerBase
     {
-        private readonly DBContext _context;
+        private readonly ISecurityService _security;
         private readonly ILogger<SecurityController> _logger;
 
 
-        public SecurityController(DBContext context, ILogger<SecurityController> logger)
+        public SecurityController(ISecurityService context, ILogger<SecurityController> logger)
         {
-            _context = context;
+            _security = context;
             _logger = logger;
         }
         [HttpPost]
         [Route("[action]/{login}")]
-        public async Task<IActionResult> GetToken(string login, string password)
+        public async Task<ActionResult<TokenDTO>> GetToken(string login, string password)
         {
-            _logger.LogInformation(login + password);
-            var identity = GetIdentity(login, password);
-            if (identity == null)
+            try
             {
-                return BadRequest(new { errorText = "Invalid username or password." });
+                var item = await _security.Login(login, password);
+                return new OkObjectResult(item);
             }
- 
-            var now = DateTime.UtcNow;
-            // создаем JWT-токен
-            var jwt = new JwtSecurityToken(
-                issuer: AuthOptions.ISSUER,
-                audience: AuthOptions.AUDIENCE,
-                notBefore: now,
-                claims: identity.Claims,
-                expires: now.Add(TimeSpan.FromDays(AuthOptions.LIFETIME)),
-                signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
-            
-            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
- 
-            var response = new
+            catch (ServiceException e)
             {
-                access_token = encodedJwt,
-                login = identity.Name
-            };
- 
-            return new JsonResult(response);
+                return new BadRequestObjectResult(e.Message);
+            }
+            catch (Exception e) {
+                _logger.LogWarning(message: e.Message, exception: e);
+                return StatusCode(500);
+            }
+        }
+        [HttpPost]
+        [Route("registrate")]
+        public async Task<ActionResult<TokenDTO>> Registrate([FromBody]RegistrateUserDTO user)
+        {
+            try
+            {
+                await _security.RegistrateUser(user);
+                var item = _security.Login(user.Login, user.Password).Result;
+                return new OkObjectResult(item);
+
+            }
+            catch (ServiceException e)
+            {
+                return new BadRequestObjectResult(e.Message);
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(message: e.Message, exception: e);
+                return new BadRequestResult();
+            }
         }
 
         [HttpGet]
         [Route("[action]/{login}")]
-        public async Task<IActionResult> Email(string login, string key)
+        public async Task<ActionResult> Email(string login, string key)
         {
-            try
+            try 
+            { 
+                await _security.ConfirmEmail(login, key);
+                return new OkObjectResult(true);
+            } catch (ServiceException e)
             {
-                var item = await _context.Credentials.FirstOrDefaultAsync(x => x.Login == login);
-                if (key.Equals(item.Key) && item.IsEmail && DateTime.Now < item.ExpDate)
-                {
-                    var user = await _context.Users.FirstOrDefaultAsync(x => x.Login == login);
-                    user.Confirmed = true;
-                    _context.Credentials.Remove(item);
-                    await _context.SaveChangesAsync();
-                }
-                return new OkResult();
+                return new BadRequestObjectResult(e.Message);
             }
-            catch (Exception e)
-            {
-                _logger.Log(LogLevel.Warning, message:e.Message, exception:e);
-                return new BadRequestResult();
-            }
+            catch (Exception e) { _logger.LogWarning(message: e.Message, exception: e); return StatusCode(500); }
         }
-        private ClaimsIdentity GetIdentity(string login, string password)
-        {
-            var user = _context.Users.FirstOrDefault(x => x.Login==login);
-            string hashed = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                password: password,
-                salt: Convert.FromBase64String(user.Salt),
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 100000,
-                numBytesRequested: 256 / 8));
-            if (user.Password == hashed)
-            {
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimsIdentity.DefaultNameClaimType, user.Login),
-                    new Claim("id", Convert.ToString(user.Id)),
-                    new Claim(ClaimsIdentity.DefaultRoleClaimType, user.IsAdmin ? "Admin": "User"),
-                };
-                _logger.LogInformation(claims[1].Value);
-                ClaimsIdentity claimsIdentity =
-                    new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
-                        ClaimsIdentity.DefaultRoleClaimType);
-                return claimsIdentity;
-            }
-            return null;
-        }
+        
     }
 }
