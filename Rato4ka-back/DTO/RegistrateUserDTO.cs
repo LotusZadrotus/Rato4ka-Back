@@ -2,15 +2,16 @@
 
 namespace Rato4ka_back.DTO
 {
-    public record RegistrateUserDTO: UserDetailInfoDTO
+    public record RegistrateUserDTO
     {
+        public string Login { get; set; }
         public string Password { get; set; }
-        public byte[] Avatar { get; set; }
+        public string Email { get; set; }
         public RegistrateUserDTO(User user)
-            :base(user)
         {
+            Login = user.Login;
             Password = user.Password;
-            Avatar = user.Avatar;
+            Email = user.Email;
         }
         public RegistrateUserDTO()
         {

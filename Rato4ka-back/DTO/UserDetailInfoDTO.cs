@@ -2,8 +2,11 @@
 
 namespace Rato4ka_back.DTO
 {
-    public record UserDetailInfoDTO: UserDTO
+    public record UserDetailInfoDTO
     {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string DiscordId { get; set; }
         public string Login { get; set; }
         public string Email { get; set; }
         public bool IsEmailConfirmed { get; set; }
@@ -12,8 +15,10 @@ namespace Rato4ka_back.DTO
 
         }
         public UserDetailInfoDTO(User user)
-            :base(user)
         {
+            Id = user.Id;
+            Name = user.Name;
+            DiscordId = user.DiscordId;
             Login = user.Login;
             Email = user.Email;
             IsEmailConfirmed = user.Confirmed;
@@ -26,7 +31,6 @@ namespace Rato4ka_back.DTO
                 Login = user.Login,
                 Email = user.Email,
                 Name = user.Name,
-                IsAdmin = user.IsAdmin,
                 Confirmed = user.IsEmailConfirmed,
                 DiscordId = user.DiscordId
             };
