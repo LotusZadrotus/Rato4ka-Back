@@ -6,21 +6,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Rato4ka_back.Models
 {
     [Table("Users")]
-    public class User
+    public class User: Base
     {
-        [Key]
-        [Column("id")]
-        public int Id { get; set; }
         [Column("avatar")]
         public byte[]? Avatar { get; set; }
-        [Column("discordId")]
+        [Column("discord_id")]
         public string? DiscordId { get; set; }
         [Column("password")]
         public string? Password { get; set; }
         [Column("email")]
         [EmailAddress]
         public string? Email { get; set; }
-        [Column("isAdmin")]
+        [Column("is_admin")]
         public bool IsAdmin { get; set; }
         [Column("name")]
         public string? Name { get; set; }
@@ -28,8 +25,10 @@ namespace Rato4ka_back.Models
         public string? Login { get; set; }
         [Column("salt")]
         public string? Salt { get; set; }
-        [Column("isEmailConfirmed")]
+        [Column("is_email_confirmed")]
         public bool Confirmed { get; set; }
+        [Column("desc")]
+        public string? Description { get; set; }
 
         public User(int id, bool isAdmin, string name)
         {

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Rato4ka_back.Models
 {
-    [Table("Cred")]
+    [Table("Creditionals")]
     public class Cred
     {
         [Key]
@@ -14,7 +14,7 @@ namespace Rato4ka_back.Models
         public string Key { get; set; }
         [Column("email")]
         public bool IsEmail { get; set; }
-        [Column("expDate")]
+        [Column("exp_date")]
         public DateTime ExpDate { get; set; }
     }
 }
