@@ -4,7 +4,9 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Net.Mail;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Rato4ka_back.Util;
 
@@ -14,17 +16,20 @@ namespace Rato4ka_back.Services.impl
     {
         private readonly ILogger<MailService> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IWebHostEnvironment _env;
 
-        public MailService(ILogger<MailService> logger, IConfiguration configuration)
+        public MailService(ILogger<MailService> logger, IConfiguration configuration, IWebHostEnvironment env)
         {
             _logger = logger;
             _configuration = configuration;
+            _env = env;
         }
         public void SentMail(string email, MailSubject subject, string login, string key)
         {
             try
             {
-                var info = _configuration.GetSection("Mail");
+                var info = _env.IsDevelopment() ? _configuration.GetSection("Mail.Develop") : _configuration.GetSection("Mail");
+
                 var client = new SmtpClient(info["Host"], Convert.ToInt32(info["Port"]))
                 {
                     Credentials = new NetworkCredential(info["mail"], info["password"]),
