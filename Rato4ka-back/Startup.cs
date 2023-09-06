@@ -48,6 +48,7 @@ namespace Rato4ka_back
             services.AddTransient<IMailService, MailService>();
             services.AddScoped<IUnit, Unit>();
             services.AddScoped<IUserSevice, UserService>();
+            services.AddScoped<ISecurityService, SecurityService>();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
             {
                 options.RequireHttpsMetadata = false;
@@ -78,6 +79,7 @@ namespace Rato4ka_back
         {
             if (env.IsDevelopment())
             {
+                
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Rato4ka_back v1"));

@@ -6,10 +6,12 @@ using Rato4ka_back.DTO;
 using Rato4ka_back.Exceptions;
 using Rato4ka_back.Models;
 using Rato4ka_back.Repositories;
+using Rato4ka_back.Repositories.impl;
 using Rato4ka_back.Util;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -20,23 +22,46 @@ namespace Rato4ka_back.Services.impl
     public class SecurityService : ISecurityService
     {
         public readonly IUnit _unit;
+        public const string LOGIN_ERROR = "Incorrect login or password";
         public readonly IMailService _mailService;
         public readonly ILogger<SecurityService> _logger;
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private readonly Random _random = new Random();
 
-        public SecurityService(IUnit unit, IMailService mailService)
+        public SecurityService(IUnit unit, IMailService mailService, ILogger<SecurityService> logger)
         {
             _unit = unit;
+            _logger = logger;
             _mailService = mailService;
         }
 
-        public Task ConfirmEmail(string login, string key)
+        public async Task ConfirmEmail(string login, string key)
         {
-            throw new System.NotImplementedException();
+            try
+            {
+                var cred = await _unit.GetCred(login);
+                if(cred == null)
+                {
+                    throw new ServiceException("There was no such user or you have already confirmed your email"); 
+                }
+                if(cred.Login == login && cred.Key == key)
+                {
+                    var user = await _unit.GetUserByLogin(login);
+                    user.Confirmed = true;
+                    await _unit.DeleteCred(login);
+                    await _unit.SaveAsync();
+                }
+            }catch (InvalidOperationException e)
+            {
+                throw new ServiceException(e.Message);
+            }
+            catch (Exception e) {
+                _logger.LogWarning(e.Message, e);
+                throw new ApplicationException($"Error happened in SecurityService by method ConfirmEmail.{Environment.NewLine}Message: {e.Message}{Environment.NewLine}Inner Exception: {e.InnerException.Message}{Environment.NewLine}Login: {login}{Environment.NewLine}");
+            }
         }
 
-        public async Task<string> Login(string login, string password)
+        public async Task<TokenDTO> Login(string login, string password)
         {
             try
             {
@@ -49,15 +74,14 @@ namespace Rato4ka_back.Services.impl
                     claims: identity.Claims,
                     expires: now.Add(TimeSpan.FromDays(AuthOptions.LIFETIME)),
                     signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
-                return new JwtSecurityTokenHandler().WriteToken(jwt);
+                var token = new JwtSecurityTokenHandler().WriteToken(jwt);
+                return new TokenDTO(token, login);
             }
+            catch(InvalidOperationException e) { throw new ServiceException(e.Message); }
             catch(Exception e)
             {
-                if(e is InvalidOperationException)
-                {
-                    throw new InvalidOperationException(e.Message);
-                }
-                throw new ServiceException($"Error happened in SecurityService by method Login.{Environment.NewLine}Message: {e.Message}{Environment.NewLine}Inner Exception: {e.InnerException.Message}{Environment.NewLine}Login: {login}{Environment.NewLine}");
+                _logger.LogWarning(e.Message, e);
+                throw new ApplicationException($"Error happened in SecurityService by method Login.{Environment.NewLine}Message: {e.Message}{Environment.NewLine}Inner Exception: {e.InnerException.Message}{Environment.NewLine}Login: {login}{Environment.NewLine}");
             }
         }
 
@@ -78,11 +102,9 @@ namespace Rato4ka_back.Services.impl
                     numBytesRequested: 256 / 8));
                 var toCreate = new User()
                 {
-                    Avatar = user.Avatar,
-                    DiscordId = user.DiscordId,
                     Email = user.Email,
-                    IsAdmin = user.IsAdmin,
-                    Name = user.Name,
+                    IsAdmin = false,
+                    Name = user.Login,
                     Login = user.Login,
                     Confirmed = false
                 };
@@ -92,27 +114,43 @@ namespace Rato4ka_back.Services.impl
                     .Select(s => s[_random.Next(s.Length)]).ToArray();
                 var link = Enumerable.Repeat(chars, 64)
                     .Select(s => s[_random.Next(s.Length)]).ToArray();
-                toCreate = await _unit.GetRepo<User>().AddAsync(user);
+                toCreate = await _unit.GetRepo<User>().AddAsync(toCreate);
                 await _unit.AddCred(new Cred()
                 {
                     Login = user.Login,
-                    ExpDate = DateTime.Now.Add(TimeSpan.FromDays(10)),
+                    ExpDate = DateTime.Now.Add(TimeSpan.FromDays(10)).ToUniversalTime(),
                     IsEmail = true,
                     Key = new string(key)
                 });
-                await _unit.GetRepo<Links>().AddAsync(new Links()
+                await _unit.GetRepo<LinksUsers>().AddAsync(new LinksUsers()
                 {
-                    Id = user.Id,
-                    Link = Convert.ToString(link)
+                    Id = toCreate.Id,
+                    Link = new string(link)
                 });
-                _mailService.SentMail(user.Email, MailSubject.Registration, user.Login, new string(key));
                 await _unit.SaveAsync();
+                _mailService.SentMail(user.Email, MailSubject.Registration, user.Login, new string(key));
+                
+            }
+            catch (InvalidOperationException e)
+            {
+                throw new ServiceException(e.Message);
             }
             catch (Exception e)
             {
-                _logger.Log(LogLevel.Warning, message: e.Message, exception: e);
+                var npge = e.InnerException as Npgsql.PostgresException;
+                if (npge != null)
+                {
+                    
+                    switch (npge.SqlState)
+                    {
+                        case "23505":
+                            throw new ServiceException("Such loggin already exist", "login");
+                        
+                            
+                    }
+                }
                 _logger.LogWarning($"{$"Something went wrong in method CreateUser: {e.Message}"}{user}", e); 
-                throw new ServiceException($"Error happened in SecurityService by method RegistrateUser.{Environment.NewLine}Message: {e.Message}{Environment.NewLine}Inner Exception: {e.InnerException.Message}{Environment.NewLine}User: {user}");
+                throw new ApplicationException($"Error happened in SecurityService by method RegistrateUser.{Environment.NewLine}Message: {e.Message}{Environment.NewLine}Inner Exception: {e.InnerException.Message}{Environment.NewLine}User: {user}");
             }
         }
         private async Task<ClaimsIdentity> GetIdentity(string login, string password)
@@ -120,7 +158,7 @@ namespace Rato4ka_back.Services.impl
             var user = await _unit.GetUserByLogin(login);
             if(user == null)
             {
-                throw new InvalidOperationException("There are no user with such login");
+                throw new InvalidOperationException(LOGIN_ERROR);
             }
             string hashed = Convert.ToBase64String(KeyDerivation.Pbkdf2(
                 password: password,
@@ -142,7 +180,7 @@ namespace Rato4ka_back.Services.impl
                         ClaimsIdentity.DefaultRoleClaimType);
                 return claimsIdentity;
             }
-            return null;
+            throw new InvalidOperationException(LOGIN_ERROR);
         }
     }
 }
